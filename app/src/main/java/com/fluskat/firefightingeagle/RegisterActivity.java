@@ -125,7 +125,12 @@ public class RegisterActivity extends AppCompatActivity
                 boolean success = response.optBoolean("success");
                 if (success)
                 {
+                    Utils.mUser = new User(response.optJSONObject("user"));
+                    Preferences.setToken(getContext().getBaseContext(), response.optString("token"));
 
+                    Intent intent = new Intent(getContext(), MapsActivity.class);
+                    startActivity(intent);
+                    getContext().finish();
                 }
             }
         }, new Response.ErrorListener()

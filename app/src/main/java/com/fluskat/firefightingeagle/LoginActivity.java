@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -17,6 +18,8 @@ import com.android.volley.VolleyError;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
 
 /**
  * Created by Erenis Ramadani on 30-Apr-17. Docs
@@ -44,7 +47,7 @@ public class LoginActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        initViews();
+        checkToken();
     }
 
     //------------------------------------------------------------------------------------------------------
@@ -57,6 +60,44 @@ public class LoginActivity extends AppCompatActivity
         TextView noAccount = (TextView) findViewById(R.id.widget_text_view_no_account_login);
         noAccount.setOnClickListener(mOnClickListener);
         mLogin.setOnClickListener(mOnClickListener);
+    }
+
+    private void checkToken()
+    {
+        if (Preferences.getToken(getContext().getBaseContext()).equals(""))
+        {
+            initViews();
+        }
+        else
+        {
+            auth();
+        }
+    }
+
+    private void auth()
+    {
+        HashMap<String, String> header = new HashMap<>();
+        header.put("Authorization", "JWT " + Preferences.getToken(getContext().getBaseContext()));
+        String url = ReqConstants.PROFILE /*+ "?Authorization=JWT ".concat(Preferences.getToken(getContext().getBaseContext()))*/;
+        ReqUtils.jsonRequestWithHeaders(getContext(), Request.Method.GET, url, header, new Response.Listener<JSONObject>()
+        {
+            @Override
+            public void onResponse(JSONObject response)
+            {
+                Log.d(TAG, "Response: " + response.toString());
+                Utils.mUser = new User(response.optJSONObject("user"));
+                startActivity(new Intent(getContext(), MapsActivity.class));
+                getContext().finish();
+            }
+        }, new Response.ErrorListener()
+        {
+            @Override
+            public void onErrorResponse(VolleyError error)
+            {
+                Log.d(TAG, "Error");
+                Toast.makeText(getContext(), "Error occurred while logging in! Try again", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private boolean validate()
