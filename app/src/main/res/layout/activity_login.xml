@@ -21,9 +21,9 @@
         android:layout_marginStart="30dp"
         android:background="@drawable/layout_border"
         android:hint="Email"
-        android:text="m.kamberi"
         android:inputType="textEmailAddress"
-        android:padding="5dp"/>
+        android:padding="5dp"
+        android:text="m.kamberi"/>
 
     <EditText
         android:id="@+id/widget_edit_text_password_login"
@@ -34,9 +34,9 @@
         android:layout_marginTop="30dp"
         android:background="@drawable/layout_border"
         android:hint="Password"
-        android:text="medine123"
         android:inputType="textPassword"
-        android:padding="5dp"/>
+        android:padding="5dp"
+        android:text="medine123"/>
 
     <Button
         android:id="@+id/widget_button_login"
@@ -49,5 +49,16 @@
         android:text="Login"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/widget_text_view_no_account_login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="30dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="@string/text_view_no_account"
         android:textSize="18sp"/>
 </LinearLayout>
