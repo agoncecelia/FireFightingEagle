@@ -1,44 +1,78 @@
 package com.fluskat.firefightingeagle;
 
+import org.json.JSONObject;
+
 /**
  * Created by Dell on 4/29/2017.
  */
 
-public class User {
+public class User
+{
+    private String id;
+
     private String username;
-    private String password;
+
+    private String fullName;
+
     private String email;
+
     private String gcmToken;
 
-    public String getUsername() {
+    public User(JSONObject object)
+    {
+        id = object.optString("id");
+        username = object.optString("username");
+        email = object.optString("email");
+        fullName = object.optString("name");
+    }
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public void setId(String id)
+    {
+        this.id = id;
+    }
+
+    public String getFullName()
+    {
+        return fullName;
+    }
+
+    public void setFullName(String fullName)
+    {
+        this.fullName = fullName;
+    }
+
+    public String getUsername()
+    {
         return username;
     }
 
-    public void setUsername(String username) {
+    public void setUsername(String username)
+    {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getEmail() {
+    public String getEmail()
+    {
         return email;
     }
 
-    public void setEmail(String email) {
+    public void setEmail(String email)
+    {
         this.email = email;
     }
 
-    public String getGcmToken() {
+    public String getGcmToken()
+    {
         return gcmToken;
     }
 
-    public void setGcmToken(String gcmToken) {
+    public void setGcmToken(String gcmToken)
+    {
         this.gcmToken = gcmToken;
     }
 }
