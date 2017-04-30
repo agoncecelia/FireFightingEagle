@@ -2,4 +2,5 @@
     <string name="app_name">FireFightingEagle</string>
     <string name="title_activity_maps">Map</string>
     <string name="text_view_no_account"><u>No account? Register</u></string>
+    <string name="text_view_calculator">Calculate danger index for a fire</string>
 </resources>

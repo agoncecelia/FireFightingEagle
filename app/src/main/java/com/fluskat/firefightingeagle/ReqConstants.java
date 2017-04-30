@@ -6,11 +6,14 @@ package com.fluskat.firefightingeagle;
 
 public class ReqConstants
 {
-    public static String HOST = "http://192.168.0.103:3000/users/";
+    public static String HOST = "http://10.10.26.20:3000/";
+    public static String USERS = HOST + "users/";
 
-    public static String LOGIN = HOST + "authenticate";
+    public static String LOGIN = HOST + USERS + "authenticate";
 
-    public static String REGISTER = HOST + "register";
+    public static String REGISTER = HOST + USERS + "register";
 
-    public static String PROFILE = HOST + "profile";
+    public static String PROFILE = HOST + USERS + "profile";
+
+    public static String CALCULATE = HOST + "calculate";
 }
