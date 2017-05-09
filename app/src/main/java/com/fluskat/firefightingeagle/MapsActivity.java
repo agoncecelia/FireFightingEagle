@@ -51,8 +51,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        ImageView calculate = (ImageView) findViewById(R.id.widget_image_view_calculate_danger);
-        calculate.setOnClickListener(mOnClickListener);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         mapFragment.getMapAsync(this);
@@ -204,10 +202,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             int id = v.getId();
             switch (id)
             {
-                case R.id.widget_image_view_calculate_danger:
-                    Intent intent = new Intent(MapsActivity.this, Calculator.class);
-                    startActivity(intent);
-                    break;
+
             }
         }
     };
