@@ -19,4 +19,6 @@ public class ReqConstants
     public static String CALCULATE = HOST + "calculate";
 
     public static String CHECK_DANGER = HOST + "checkdanger";
+
+    public static String UPDATE_LOCATION = HOST + "receiveLocation";
 }

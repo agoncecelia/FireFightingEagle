@@ -127,33 +127,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     //------------------------------------------------------------------------------------------------------------------------------
 
-    private LocationListener mLocationListener = new LocationListener()
-    {
-        @Override
-        public void onLocationChanged(Location location)
-        {
-            mLocation = location;
-            Log.d(TAG, "onLocationChanged: " + location);
-        }
 
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras)
-        {
-            Log.d(TAG, "OnStatusChanged: " + provider);
-        }
-
-        @Override
-        public void onProviderEnabled(String provider)
-        {
-            Log.d(TAG, "onProviderEnabled: " + provider);
-        }
-
-        @Override
-        public void onProviderDisabled(String provider)
-        {
-            Log.d(TAG, "onProviderDisabled: " + provider);
-        }
-    };
 
     /**
      * Manipulates the map once available.

@@ -41,7 +41,7 @@ public class ReqUtils {
         MySingleton.getInstance(act).addToRequestQueue(request);
     }
 
-    public static void jsonRequestWithParams(Activity act, int reqType, String url, JSONObject params,
+    public static void jsonRequestWithParams(Context act, int reqType, String url, JSONObject params,
                                              Response.Listener<JSONObject> listener,
                                              Response.ErrorListener errorListener) {
         JsonObjectRequest request = new JsonObjectRequest(reqType, url, params, listener, errorListener);

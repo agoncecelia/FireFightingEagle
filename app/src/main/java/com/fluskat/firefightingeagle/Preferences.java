@@ -18,4 +18,5 @@ public class Preferences
     {
         return PreferenceManager.getDefaultSharedPreferences(context).getString("token", "");
     }
+
 }
