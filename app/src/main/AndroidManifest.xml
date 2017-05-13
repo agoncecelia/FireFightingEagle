@@ -46,6 +46,24 @@
         </activity>
         <activity android:name=".RegisterActivity"/>
         <activity android:name=".Calculator"/>
+
+        <service
+            android:name=".gcm.MyFcmListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".gcm.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+        <service android:name=".UpdateLocationService"
+                 android:exported="false"/>
     </application>
 
 </manifest>

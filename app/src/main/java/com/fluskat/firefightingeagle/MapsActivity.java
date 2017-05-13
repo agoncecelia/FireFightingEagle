@@ -2,11 +2,13 @@ package com.fluskat.firefightingeagle;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -28,8 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback
-{
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
     private static String TAG = MapsActivity.class.getSimpleName();
 
     private GoogleMap mMap;
@@ -38,78 +39,85 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private int radius;
 
-    private LocationManager locationManager;
-
-    private Location mLocation;
-
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        if (getIntent().hasExtra("location")) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 150);
+            return;
+        }
+
+        initMap();
+        startUpdateLocationService();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 150:
+                initMap();
+                break;
+        }
+    }
+
+    private void initMap() {
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         mapFragment.getMapAsync(this);
+
     }
 
-    private void checkDanger()
-    {
+    private void startUpdateLocationService() {
+        Intent intent = new Intent(MapsActivity.this, UpdateLocationService.class);
+        startService(intent);
+    }
+
+    private void checkDanger() {
         String URL = ReqConstants.CHECK_DANGER;
-        try
-        {
-            ReqUtils.jsonRequestWithParams(MapsActivity.this, Request.Method.POST, URL, params(), new Response.Listener<JSONObject>()
-            {
+        try {
+            ReqUtils.jsonRequestWithParams(MapsActivity.this, Request.Method.POST, URL, params(), new Response.Listener<JSONObject>() {
                 @Override
-                public void onResponse(JSONObject response)
-                {
+                public void onResponse(JSONObject response) {
                     Log.d(TAG, "Response: " + response.toString());
                     boolean success = response.optBoolean("success");
-                    if (!success)
-                    {
+                    if (!success) {
                         Toast.makeText(MapsActivity.this, response.optString("msg"), Toast.LENGTH_SHORT).show();
                         JSONArray fires = response.optJSONArray("fires");
                         drawMarkers(fires);
-                    }
-                    else
-                    {
+                    } else {
 
                     }
                 }
-            }, new Response.ErrorListener()
-            {
+            }, new Response.ErrorListener() {
                 @Override
-                public void onErrorResponse(VolleyError error)
-                {
-                    if (error.networkResponse != null && error.networkResponse.data != null)
-                    {
+                public void onErrorResponse(VolleyError error) {
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
                         String string = new String(error.networkResponse.data);
                         Log.d(TAG, "Response Error: " + string);
                     }
                     Log.d(TAG, "Response Error: " + error.getMessage());
                 }
             });
-        }
-        catch (JSONException e)
-        {
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    private JSONObject params() throws JSONException
-    {
+    private JSONObject params() throws JSONException {
         JSONObject object = new JSONObject();
-        object.put("lat", mLocation.getLatitude());
-        object.put("lng", mLocation.getLongitude());
+//        object.put("lat", mLocation.getLatitude());
+//        object.put("lng", mLocation.getLongitude());
 
         return object;
     }
 
-    private void drawMarkers(JSONArray fires)
-    {
-        for (int i = 0; i < fires.length(); i++)
-        {
+    private void drawMarkers(JSONArray fires) {
+        for (int i = 0; i < fires.length(); i++) {
             JSONObject object = fires.optJSONObject(i);
             double lat = object.optDouble("latitude");
             double lng = object.optDouble("longitude");
@@ -117,8 +125,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void setZoomLevel()
-    {
+    private void setZoomLevel() {
         double scale;
         scale = radius / 500;
         zoomLevel = (int) (16 - Math.log(scale) / Math.log(2));
@@ -126,7 +133,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     //------------------------------------------------------------------------------------------------------------------------------
-
 
 
     /**
@@ -139,41 +145,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
      * installed Google Play services and returned to the app.
      */
     @Override
-    public void onMapReady(GoogleMap googleMap)
-    {
+    public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 150);
             return;
         }
         mMap.setMyLocationEnabled(true);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-        {
-            mLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 15000, 500, mLocationListener);
-        }
-        else
-        {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 150);
-        }
-        if (mLocation != null)
-        {
-            CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(new LatLng(mLocation.getLatitude(), mLocation.getLongitude()), 15f);
-            mMap.animateCamera(cu);
-        }
+
+        CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(new LatLng(mMap.getMyLocation().getLatitude(), mMap.getMyLocation().getLongitude()), 15f);
+        mMap.animateCamera(cu);
         checkDanger();
     }
 
-    private View.OnClickListener mOnClickListener = new View.OnClickListener()
-    {
+    private View.OnClickListener mOnClickListener = new View.OnClickListener() {
         @Override
-        public void onClick(View v)
-        {
+        public void onClick(View v) {
             int id = v.getId();
-            switch (id)
-            {
+            switch (id) {
 
             }
         }

@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "231166901843",
+    "firebase_url": "https://fire-fighting-eagle.firebaseio.com",
+    "project_id": "fire-fighting-eagle",
+    "storage_bucket": "fire-fighting-eagle.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:231166901843:android:0f32bfecedc9ec76",
+        "android_client_info": {
+          "package_name": "com.fluskat.firefightingeagle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "231166901843-3p0sti0ksicmo8ugh48vu353lddc1sj9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fluskat.firefightingeagle",
+            "certificate_hash": "8aa1e1addd49a98e3f985c6dad4543716007ddf5"
+          }
+        },
+        {
+          "client_id": "231166901843-48lhhq1p0a8aggp7tpdslbu3gjkve4sg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fluskat.firefightingeagle",
+            "certificate_hash": "5d76b3eb1731278205fee5968563c9625e08ea96"
+          }
+        },
+        {
+          "client_id": "231166901843-63d998g4cs5h4c68k2q6rlj9ba6poc9c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB94xEXMqqxeA0sV0i1NXmLUeXTPC9h9lU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "231166901843-63d998g4cs5h4c68k2q6rlj9ba6poc9c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
