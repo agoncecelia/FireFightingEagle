@@ -2,7 +2,6 @@ package com.fluskat.firefightingeagle;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -86,7 +85,7 @@ public class LoginActivity extends AppCompatActivity
             {
                 Log.d(TAG, "Response: " + response.toString());
                 Utils.mUser = new User(response.optJSONObject("user"));
-                startActivity(new Intent(getContext(), MapsActivity.class));
+                startActivity(new Intent(getContext(), MainActivity.class));
                 getContext().finish();
             }
         }, new Response.ErrorListener()
@@ -134,7 +133,7 @@ public class LoginActivity extends AppCompatActivity
                     Utils.mUser = new User(response.optJSONObject("user"));
 
                     //TODO: move to MainActivity
-                    Intent intent = new Intent(getContext(), MapsActivity.class);
+                    Intent intent = new Intent(getContext(), MainActivity.class);
                     startActivity(intent);
                     getContext().finish();
                 }

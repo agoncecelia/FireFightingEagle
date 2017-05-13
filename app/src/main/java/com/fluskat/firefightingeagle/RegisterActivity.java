@@ -128,7 +128,7 @@ public class RegisterActivity extends AppCompatActivity
                     Utils.mUser = new User(response.optJSONObject("user"));
                     Preferences.setToken(getContext().getBaseContext(), response.optString("token"));
 
-                    Intent intent = new Intent(getContext(), MapsActivity.class);
+                    Intent intent = new Intent(getContext(), MainActivity.class);
                     startActivity(intent);
                     getContext().finish();
                 }

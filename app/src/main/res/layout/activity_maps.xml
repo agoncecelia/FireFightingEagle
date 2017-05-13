@@ -16,7 +16,7 @@
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:context="com.fluskat.firefightingeagle.MapsActivity"/>
+            tools:context="com.fluskat.firefightingeagle.MainActivity"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -58,15 +58,25 @@
         android:background="@color/fire_fighter_dark_grey"
         android:paddingBottom="10dp"
         android:paddingTop="10dp"
+        android:orientation="vertical"
         >
 
         <Button
             android:id="@+id/button_report_fire"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Report Fire"
+            android:text="Select fire location"
             android:textColor="@android:color/holo_red_dark"
             android:textSize="20sp"
             />
+        <Button
+            android:id="@+id/button_SOS"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SOS"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="20sp"
+            />
+
     </LinearLayout>
 </LinearLayout>

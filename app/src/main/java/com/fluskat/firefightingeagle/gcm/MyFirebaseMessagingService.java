@@ -25,13 +25,14 @@ import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.fluskat.firefightingeagle.MapsActivity;
+import com.fluskat.firefightingeagle.MainActivity;
 import com.fluskat.firefightingeagle.R;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 
-public class MyFirebaseMessagingService extends FirebaseMessagingService {
+public class MyFirebaseMessagingService extends FirebaseMessagingService
+{
     private static final String TAG = "MyFirebaseMsgService";
 
     /**
@@ -41,7 +42,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      */
     // [START receive_message]
     @Override
-    public void onMessageReceived(RemoteMessage remoteMessage) {
+    public void onMessageReceived(RemoteMessage remoteMessage)
+    {
         // TODO(developer): Handle FCM messages here.
         // If the application is in the foreground handle both data and notification messages here.
         // Also if you intend on generating your own notifications as a result of a received FCM
@@ -49,15 +51,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Log.d(TAG, "From: " + remoteMessage.getFrom());
         Log.d(TAG, "Notification Message Body: " + remoteMessage.getNotification().getBody());
         RemoteMessage.Notification notification = remoteMessage.getNotification();
-
+        sendNotification(notification.getTitle(), notification.getBody());
     }
     // [END receive_message]
 
     /**
      * Create and show a simple notification containing the received FCM message.
      */
-    private void sendNotification(String title, String message) {
-        Intent intent = new Intent(this, MapsActivity.class);
+    private void sendNotification(String title, String message)
+    {
+        Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 //        intent.putExtra(Intent.ACTION_PICK, "notification");
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);

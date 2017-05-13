@@ -2,7 +2,6 @@ package com.fluskat.firefightingeagle;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -11,13 +10,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
+import android.widget.Button;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -26,145 +21,126 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
-    private static String TAG = MapsActivity.class.getSimpleName();
+/**
+ * Created by Erenis Ramadani on 13-May-17. TODO:add documentation
+ */
 
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback
+{
     private GoogleMap mMap;
 
-    private int zoomLevel;
+    private Button report;
 
-    private int radius;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
-
-        if (getIntent().hasExtra("location")) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 150);
-            return;
-        }
-
-        initMap();
-        startUpdateLocationService();
+        setContentView(R.layout.maps_activity);
+        report = (Button) findViewById(R.id.report_maps);
+        report.setOnClickListener(mOnClickListener);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapArbesa);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
+    {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
+        switch (requestCode)
+        {
             case 150:
-                initMap();
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    initLocation();
+
+                }
                 break;
         }
     }
 
-    private void initMap() {
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-
-//        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        mapFragment.getMapAsync(this);
-
-    }
-
-    private void startUpdateLocationService() {
-        Intent intent = new Intent(MapsActivity.this, UpdateLocationService.class);
-        startService(intent);
-    }
-
-    private void checkDanger() {
-        String URL = ReqConstants.CHECK_DANGER;
-        try {
-            ReqUtils.jsonRequestWithParams(MapsActivity.this, Request.Method.POST, URL, params(), new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    Log.d(TAG, "Response: " + response.toString());
-                    boolean success = response.optBoolean("success");
-                    if (!success) {
-                        Toast.makeText(MapsActivity.this, response.optString("msg"), Toast.LENGTH_SHORT).show();
-                        JSONArray fires = response.optJSONArray("fires");
-                        drawMarkers(fires);
-                    } else {
-
-                    }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    if (error.networkResponse != null && error.networkResponse.data != null) {
-                        String string = new String(error.networkResponse.data);
-                        Log.d(TAG, "Response Error: " + string);
-                    }
-                    Log.d(TAG, "Response Error: " + error.getMessage());
-                }
-            });
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private JSONObject params() throws JSONException {
-        JSONObject object = new JSONObject();
-//        object.put("lat", mLocation.getLatitude());
-//        object.put("lng", mLocation.getLongitude());
-
-        return object;
-    }
-
-    private void drawMarkers(JSONArray fires) {
-        for (int i = 0; i < fires.length(); i++) {
-            JSONObject object = fires.optJSONObject(i);
-            double lat = object.optDouble("latitude");
-            double lng = object.optDouble("longitude");
-            mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng)));
-        }
-    }
-
-    private void setZoomLevel() {
-        double scale;
-        scale = radius / 500;
-        zoomLevel = (int) (16 - Math.log(scale) / Math.log(2));
-//        return
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------
-
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(GoogleMap googleMap)
+    {
         mMap = googleMap;
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 150);
-            return;
-        }
-        mMap.setMyLocationEnabled(true);
-
-        CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(new LatLng(mMap.getMyLocation().getLatitude(), mMap.getMyLocation().getLongitude()), 15f);
-        mMap.animateCamera(cu);
-        checkDanger();
+        initLocation();
+        mMap.setOnMapClickListener(mOnMapClickListener);
     }
 
-    private View.OnClickListener mOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            int id = v.getId();
-            switch (id) {
+    private void initLocation()
+    {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        {
 
+            Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 15000, 500, mLocationListener);
+            if (mMap != null)
+            {
+
+                mMap.setMyLocationEnabled(true);
+                if (location != null)
+                {
+                    CameraUpdate Cu = CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15f);
+                    mMap.animateCamera(Cu);
+                }
+            }
+        }
+        else
+        {
+            ActivityCompat.requestPermissions(MapsActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 150);
+        }
+    }
+
+    private LocationListener mLocationListener = new LocationListener()
+    {
+        @Override
+        public void onLocationChanged(Location location)
+        {
+
+        }
+
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle)
+        {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String s)
+        {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String s)
+        {
+            //TODO: notify user to enable GPS
+        }
+    };
+
+    private GoogleMap.OnMapClickListener mOnMapClickListener = new GoogleMap.OnMapClickListener()
+    {
+        @Override
+        public void onMapClick(LatLng latLng)
+        {
+            mMap.addMarker(new MarkerOptions().position(latLng).snippet("Fire here"));
+            report.setEnabled(true);
+        }
+    };
+
+    private View.OnClickListener mOnClickListener = new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View view)
+        {
+            int id = view.getId();
+            switch (id)
+            {
+                case R.id.report_maps:
+                    //TODO:implement API call
+                    break;
             }
         }
     };
