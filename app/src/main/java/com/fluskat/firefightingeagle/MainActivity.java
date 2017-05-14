@@ -1,8 +1,12 @@
 package com.fluskat.firefightingeagle;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -15,6 +19,8 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -27,6 +33,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback
@@ -35,15 +42,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private GoogleMap mMap;
 
-    private int zoomLevel;
-
-    private int radius;
-
     private Button reportFire;
 
     private Button SOS;
 
     private LatLng mLatLng;
+
+    private Location mLocation;
+
+    private LocationManager locationManager;
+
+    private MainActivity getContext()
+    {
+        return MainActivity.this;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -100,14 +112,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
-//        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            ActivityCompat.requestPermissions(getContext(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 150);
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 60000, 100, mLocationListener);
         mapFragment.getMapAsync(this);
 
     }
 
     private void startUpdateLocationService()
     {
-        Intent intent = new Intent(MainActivity.this, UpdateLocationService.class);
+        Intent intent = new Intent(getContext(), UpdateLocationService.class);
         startService(intent);
     }
 
@@ -117,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.d(TAG, "checkDanger: ");
         try
         {
-            ReqUtils.jsonRequestWithParams(MainActivity.this, Request.Method.POST, URL, params(), new Response.Listener<JSONObject>()
+            ReqUtils.jsonRequestWithParams(getContext(), Request.Method.POST, URL, params(), new Response.Listener<JSONObject>()
             {
                 @Override
                 public void onResponse(JSONObject response)
@@ -126,13 +151,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     boolean success = response.optBoolean("success");
                     if (!success)
                     {
-                        Toast.makeText(MainActivity.this, response.optString("msg"), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), response.optString("msg"), Toast.LENGTH_SHORT).show();
                         JSONArray fires = response.optJSONArray("fires");
                         drawMarkers(fires);
-                    }
-                    else
-                    {
-
                     }
                 }
             }, new Response.ErrorListener()
@@ -175,16 +196,42 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void setZoomLevel()
+    private void reportFire(LatLng location, boolean sos) throws JSONException
     {
-        double scale;
-        scale = radius / 500;
-        zoomLevel = (int) (16 - Math.log(scale) / Math.log(2));
-//        return
+        ReqUtils.jsonRequestWithParams(getContext(), Request.Method.POST, ReqConstants.REPORT_FIRE, report(location, sos),
+                                       new Response.Listener<JSONObject>()
+                                       {
+                                           @Override
+                                           public void onResponse(JSONObject response)
+                                           {
+                                               Log.d(TAG, "Response: " + response);
+                                           }
+                                       }, new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error)
+                    {
+                        Log.d(TAG, "Error: " + error.getMessage());
+                    }
+                });
+    }
+
+    private JSONObject report(LatLng location, boolean sos) throws JSONException
+    {
+        JSONObject object = new JSONObject();
+        JSONObject locationObject = new JSONObject();
+        JSONArray arr = new JSONArray();
+        arr.put(location.latitude);
+        arr.put(location.longitude);
+        locationObject.put("coordinates", arr);
+        object.put("location", locationObject);
+        object.put("sos", sos);
+        Log.d(TAG, "Report object: " + object);
+        return object;
+
     }
 
     //------------------------------------------------------------------------------------------------------------------------------
-
 
     /**
      * Manipulates the map once available.
@@ -208,8 +255,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setMyLocationEnabled(true);
         mMap.setOnMapClickListener(mOnMapClickListener);
 
-       /* CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(new LatLng(mMap.getMyLocation().getLatitude(), mMap.getMyLocation().getLongitude()), 15f);
-        mMap.animateCamera(cu);*/
+        if (mLocation != null)
+        {
+            CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(new LatLng(mLocation.getLatitude(), mLocation.getLongitude()), 15f);
+            mMap.animateCamera(cu);
+        }
         checkDanger();
     }
 
@@ -219,16 +269,45 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         public void onClick(View v)
         {
             int id = v.getId();
-            CustomAlertDialog dialog = new CustomAlertDialog(MainActivity.this);
+            CustomAlertDialog dialog = new CustomAlertDialog(getContext());
             switch (id)
             {
                 case R.id.button_SOS:
                     dialog.initQuestionDialog("Are you sure?", "Report", "Cancel", true, new CustomAlertDialog.CustomQuestionListener()
                     {
                         @Override
-                        public void onOkClicked() throws Exception
+                        public void onOkClicked()
                         {
+                            boolean tryFinished = false;
+                            try
+                            {
+                                if (Utils.checkInternet().getResponseCode() == 200)
+                                {
+                                    if (mLocation != null)
+                                    {
+                                        reportFire(new LatLng(mLocation.getLatitude(), mLocation.getLongitude()), true);
+                                    }
+                                }
+                                else
+                                {
+                                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                                    startActivity(intent);
+                                }
+                                tryFinished = true;
+                            }
+                            catch (IOException | JSONException e)
+                            {
 
+                                e.printStackTrace();
+                            }
+                            finally
+                            {
+                                if (!tryFinished)
+                                {
+                                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                                    startActivity(intent);
+                                }
+                            }
                         }
 
                         @Override
@@ -241,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 case R.id.button_report_fire:
                     if (reportFire.getText().toString().toLowerCase(Locale.ENGLISH).contains("select"))
                     {
-                        Toast.makeText(MainActivity.this, "Locate the fire by clicking on map", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Locate the fire by clicking on map", Toast.LENGTH_LONG).show();
                     }
                     else
                     {
@@ -250,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             @Override
                             public void onOkClicked() throws Exception
                             {
-                                //TODO:make request
+                                reportFire(mLatLng, false);
                             }
 
                             @Override
@@ -273,6 +352,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.clear();
             mMap.addMarker(new MarkerOptions().position(latLng).title("Fire").snippet("Is this fire's location?"));
             reportFire.setText("Report Fire");
+        }
+    };
+
+    private LocationListener mLocationListener = new LocationListener()
+    {
+        @Override
+        public void onLocationChanged(Location location)
+        {
+            mLocation = location;
+            if (mMap != null)
+            {
+                CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15f);
+                mMap.animateCamera(cu);
+            }
+        }
+
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle)
+        {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String s)
+        {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String s)
+        {
+            Toast.makeText(getContext(), "Please enable GPS!", Toast.LENGTH_SHORT).show();
         }
     };
 }

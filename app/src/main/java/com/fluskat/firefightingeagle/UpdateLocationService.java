@@ -12,6 +12,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -24,6 +25,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -136,7 +138,6 @@ public class UpdateLocationService extends Service
         object.put("gcmToken", gcmToken);
         object.put("deviceIMEI", Utils.getIMEI(UpdateLocationService.this));
         object.put("geoLocation", locationParams(location));
-        object.put("timeStamp", System.currentTimeMillis());
 
         Log.d(TAG, "Object: " + object.toString());
         return object;
@@ -145,8 +146,14 @@ public class UpdateLocationService extends Service
     private JSONObject locationParams(Location location) throws JSONException
     {
         JSONObject object = new JSONObject();
-        object.put("lat", location.getLatitude());
-        object.put("lng", location.getLongitude());
+        JSONObject locationObject = new JSONObject();
+        JSONArray arr = new JSONArray();
+        arr.put(location.getLatitude());
+        arr.put(location.getLongitude());
+        locationObject.put("coordinates", arr);
+        object.put("location", locationObject);
+
+        Log.d(TAG, "Object: " + object);
 
         return object;
     }
