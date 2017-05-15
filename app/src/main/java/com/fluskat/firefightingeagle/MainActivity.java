@@ -33,7 +33,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback
@@ -125,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             ActivityCompat.requestPermissions(getContext(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 150);
             return;
         }
+        mLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 60000, 100, mLocationListener);
         mapFragment.getMapAsync(this);
 
@@ -278,36 +278,40 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         @Override
                         public void onOkClicked()
                         {
-                            boolean tryFinished = false;
-                            try
+                            new CheckConnectionTask(new CheckConnectionTask.ConnectionListener()
                             {
-                                if (Utils.checkInternet().getResponseCode() == 200)
+                                @Override
+                                public void isConnected()
                                 {
-                                    if (mLocation != null)
+                                    try
                                     {
-                                        reportFire(new LatLng(mLocation.getLatitude(), mLocation.getLongitude()), true);
+                                        if (mLocation != null)
+                                        {
+                                            Log.d(TAG, "isConnected location");
+                                            reportFire(new LatLng(mLocation.getLatitude(), mLocation.getLongitude()), true);
+                                        }
+                                        else
+                                        {
+                                            Log.d(TAG, "isConnected else");
+                                            Intent intent = new Intent(Intent.ACTION_DIAL);
+                                            startActivity(intent);
+                                        }
+                                    }
+                                    catch (JSONException e)
+                                    {
+                                        Log.d(TAG, "isConnected catch");
+                                        e.printStackTrace();
+                                        Intent intent = new Intent(Intent.ACTION_DIAL);
+                                        startActivity(intent);
                                     }
                                 }
-                                else
-                                {
-                                    Intent intent = new Intent(Intent.ACTION_DIAL);
-                                    startActivity(intent);
-                                }
-                                tryFinished = true;
-                            }
-                            catch (IOException | JSONException e)
-                            {
 
-                                e.printStackTrace();
-                            }
-                            finally
-                            {
-                                if (!tryFinished)
+                                @Override
+                                public void notConnected()
                                 {
-                                    Intent intent = new Intent(Intent.ACTION_DIAL);
-                                    startActivity(intent);
+                                    Log.d(TAG, "notConnected");
                                 }
-                            }
+                            }).execute();
                         }
 
                         @Override
