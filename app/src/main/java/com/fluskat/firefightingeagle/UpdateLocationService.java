@@ -139,6 +139,7 @@ public class UpdateLocationService extends Service
         object.put("deviceIMEI", Utils.getIMEI(UpdateLocationService.this));
         object.put("geoLocation", locationParams(location));
 
+
         Log.d(TAG, "Object: " + object.toString());
         return object;
     }
