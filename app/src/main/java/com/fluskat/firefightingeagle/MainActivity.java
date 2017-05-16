@@ -138,11 +138,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void checkDanger()
     {
-        String URL = ReqConstants.CHECK_DANGER;
+        String URL = ReqConstants.GET_ACTIVE_FIRES;
         Log.d(TAG, "checkDanger: ");
         try
         {
-            ReqUtils.jsonRequestWithParams(getContext(), Request.Method.POST, URL, params(), new Response.Listener<JSONObject>()
+            ReqUtils.jsonRequestWithParams(getContext(), Request.Method.GET, URL, params(), new Response.Listener<JSONObject>()
             {
                 @Override
                 public void onResponse(JSONObject response)
@@ -260,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(new LatLng(mLocation.getLatitude(), mLocation.getLongitude()), 15f);
             mMap.animateCamera(cu);
         }
-        checkDanger();
+//        checkDanger();
     }
 
     private View.OnClickListener mOnClickListener = new View.OnClickListener()

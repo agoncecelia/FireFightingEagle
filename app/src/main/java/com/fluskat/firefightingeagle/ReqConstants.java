@@ -25,4 +25,6 @@ public class ReqConstants
     public static String UPDATE_LOCATION = HOST + "receiveLocation";
 
     public static String REPORT_FIRE = HOST + "reportFire";
+
+    public static String GET_ACTIVE_FIRES = HOST + "getActiveFires";
 }
