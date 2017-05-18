@@ -137,16 +137,7 @@ public class UpdateLocationService extends Service
         String gcmToken = FirebaseInstanceId.getInstance().getToken();
         object.put("gcmToken", gcmToken);
         object.put("deviceIMEI", Utils.getIMEI(UpdateLocationService.this));
-        object.put("geoLocation", locationParams(location));
 
-
-        Log.d(TAG, "Object: " + object.toString());
-        return object;
-    }
-
-    private JSONObject locationParams(Location location) throws JSONException
-    {
-        JSONObject object = new JSONObject();
         JSONObject locationObject = new JSONObject();
         JSONArray arr = new JSONArray();
         arr.put(location.getLatitude());
@@ -154,8 +145,7 @@ public class UpdateLocationService extends Service
         locationObject.put("coordinates", arr);
         object.put("location", locationObject);
 
-        Log.d(TAG, "Object: " + object);
-
+        Log.d(TAG, "Object: " + object.toString());
         return object;
     }
 
