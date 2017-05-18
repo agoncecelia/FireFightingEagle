@@ -8,7 +8,7 @@ public class ReqConstants
 {
 //    public static String HOST = "http://10.10.26.20:3000/";
 
-    public static String HOST = "http://192.168.100.6:3000/api/";
+    public static String HOST = "http://192.168.100.14:3000/api/";
 
     public static String USERS = HOST + "users/";
 
@@ -22,7 +22,7 @@ public class ReqConstants
 
     public static String CHECK_DANGER = HOST + "checkdanger";
 
-    public static String UPDATE_LOCATION = HOST + "receiveLocation";
+    public static String UPDATE_LOCATION = HOST + "updateLocation";
 
     public static String REPORT_FIRE = HOST + "reportFire";
 

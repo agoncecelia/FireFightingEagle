@@ -120,9 +120,10 @@ public class UpdateLocationService extends Service
 
     private void updateLocation(Location location) throws JSONException
     {
+        Log.d(TAG, "update Location called");
         if (ActivityCompat.checkSelfPermission(UpdateLocationService.this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED)
         {
-            ReqUtils.jsonRequestWithParams(UpdateLocationService.this, Request.Method.POST, ReqConstants.UPDATE_LOCATION, params(location), mListener,
+            ReqUtils.jsonRequestWithParams(UpdateLocationService.this, Request.Method.PUT, ReqConstants.UPDATE_LOCATION, params(location), mListener,
                                            mErrorListener);
         }
         else
