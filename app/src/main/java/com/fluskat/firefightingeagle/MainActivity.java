@@ -92,7 +92,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 initMap();
                 break;
             case 170:
-                startUpdateLocationService();
+                try
+                {
+                    startUpdateLocationService();
+                    updateLocation();
+                }
+                catch (JSONException e)
+                {
+                    e.printStackTrace();
+                }
                 break;
         }
     }
@@ -104,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         reportFire.setOnClickListener(mOnClickListener);
         SOS.setOnClickListener(mOnClickListener);
+
     }
 
     private void initMap()
@@ -112,7 +121,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED)
         {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -136,55 +146,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         startService(intent);
     }
 
-    private void checkDanger()
-    {
-        String URL = ReqConstants.GET_ACTIVE_FIRES;
-        Log.d(TAG, "checkDanger: ");
-        try
-        {
-            ReqUtils.jsonRequestWithParams(getContext(), Request.Method.GET, URL, params(), new Response.Listener<JSONObject>()
-            {
-                @Override
-                public void onResponse(JSONObject response)
-                {
-                    Log.d(TAG, "Response: " + response.toString());
-                    boolean success = response.optBoolean("success");
-                    if (!success)
-                    {
-                        Toast.makeText(getContext(), response.optString("msg"), Toast.LENGTH_SHORT).show();
-                        JSONArray fires = response.optJSONArray("fires");
-                        drawMarkers(fires);
-                    }
-                }
-            }, new Response.ErrorListener()
-            {
-                @Override
-                public void onErrorResponse(VolleyError error)
-                {
-                    if (error.networkResponse != null && error.networkResponse.data != null)
-                    {
-                        String string = new String(error.networkResponse.data);
-                        Log.d(TAG, "Response Error: " + string);
-                    }
-                    Log.d(TAG, "Response Error: " + error.getMessage());
-                }
-            });
-        }
-        catch (JSONException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    private JSONObject params() throws JSONException
-    {
-        JSONObject object = new JSONObject();
-//        object.put("lat", mLocation.getLatitude());
-//        object.put("lng", mLocation.getLongitude());
-
-        return object;
-    }
-
     private void drawMarkers(JSONArray fires)
     {
         for (int i = 0; i < fires.length(); i++)
@@ -192,21 +153,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             JSONObject object = fires.optJSONObject(i);
             double lat = object.optDouble("latitude");
             double lng = object.optDouble("longitude");
-            mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng)).icon(BitmapDescriptorFactory.fromResource(R.drawable.circle_red)));
+            mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng))
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.circle_red)));
         }
     }
 
     private void reportFire(LatLng location, boolean sos) throws JSONException
     {
         ReqUtils.jsonRequestWithParams(getContext(), Request.Method.POST, ReqConstants.REPORT_FIRE, report(location, sos),
-                                       new Response.Listener<JSONObject>()
-                                       {
-                                           @Override
-                                           public void onResponse(JSONObject response)
-                                           {
-                                               Log.d(TAG, "Response: " + response);
-                                           }
-                                       }, new Response.ErrorListener()
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response)
+                    {
+                        Log.d(TAG, "Response: " + response);
+                        int status = response.optInt("status");
+                        if (status == 200)
+                        {
+                            Toast.makeText(getContext(), response.optString("msg"), Toast.LENGTH_SHORT).show();
+                            startActivity(new Intent(getContext(), MarkMeSafeActivity.class));
+                        }
+                    }
+                }, new Response.ErrorListener()
                 {
                     @Override
                     public void onErrorResponse(VolleyError error)
@@ -214,6 +182,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         Log.d(TAG, "Error: " + error.getMessage());
                     }
                 });
+    }
+
+    private JSONObject params() throws JSONException
+    {
+        JSONObject object = new JSONObject();
+        String gcmToken = FirebaseInstanceId.getInstance().getToken();
+        object.put("gcmToken", gcmToken);
+        object.put("deviceIMEI", Utils.getIMEI(getContext()));
+
+        JSONObject locationObject = new JSONObject();
+        JSONArray arr = new JSONArray();
+        arr.put(mLocation.getLatitude());
+        arr.put(mLocation.getLongitude());
+        locationObject.put("coordinates", arr);
+        object.put("location", locationObject);
+
+        Log.d(TAG, "Object: " + object.toString());
+        return object;
     }
 
     private JSONObject report(LatLng location, boolean sos) throws JSONException
@@ -228,7 +214,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         object.put("sos", sos);
         Log.d(TAG, "Report object: " + object);
         return object;
-
     }
 
     //------------------------------------------------------------------------------------------------------------------------------
@@ -247,7 +232,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     {
         mMap = googleMap;
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED)
         {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 150);
             return;
@@ -257,10 +243,71 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if (mLocation != null)
         {
-            CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(new LatLng(mLocation.getLatitude(), mLocation.getLongitude()), 15f);
+            CameraUpdate cu = CameraUpdateFactory
+                    .newLatLngZoom(new LatLng(mLocation.getLatitude(), mLocation.getLongitude()), 15f);
             mMap.animateCamera(cu);
+            try
+            {
+                updateLocation();
+            }
+            catch (JSONException e)
+            {
+                e.printStackTrace();
+            }
         }
+        getActiveFires();
 //        checkDanger();
+    }
+
+    private void updateLocation() throws JSONException
+    {
+        Log.d(TAG, "update Location called");
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) ==
+                PackageManager.PERMISSION_GRANTED)
+        {
+            ReqUtils.jsonRequestWithParams(getContext(), Request.Method.PUT, ReqConstants.UPDATE_LOCATION, params(),
+                    new Response.Listener<JSONObject>()
+                    {
+                        @Override
+                        public void onResponse(JSONObject jsonObject)
+                        {
+                            Log.d(TAG, "onResponse: " + jsonObject);
+                        }
+                    },
+                    new Response.ErrorListener()
+                    {
+                        @Override
+                        public void onErrorResponse(VolleyError volleyError)
+                        {
+                            Log.d(TAG, "onErrorResponse:" + volleyError.getMessage());
+                        }
+                    });
+        }
+        else
+        {
+            ActivityCompat.requestPermissions(getContext(), new String[]{Manifest.permission.READ_PHONE_STATE}, 170);
+        }
+    }
+
+    private void getActiveFires()
+    {
+        ReqUtils.jsonRequestWithParams(getContext(), Request.Method.GET, ReqConstants.GET_ACTIVE_FIRES, null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response)
+                    {
+                        JSONArray array = response.optJSONArray("response");
+                        Log.d(TAG, "onResponse fires: " + array);
+                    }
+                }, new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError volleyError)
+                    {
+
+                    }
+                });
     }
 
     private View.OnClickListener mOnClickListener = new View.OnClickListener()
@@ -273,52 +320,54 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             switch (id)
             {
                 case R.id.button_SOS:
-                    dialog.initQuestionDialog("Are you sure?", "Report", "Cancel", true, new CustomAlertDialog.CustomQuestionListener()
-                    {
-                        @Override
-                        public void onOkClicked()
-                        {
-                            new CheckConnectionTask(new CheckConnectionTask.ConnectionListener()
+                    dialog.initQuestionDialog("Are you sure?", "Report", "Cancel", true,
+                            new CustomAlertDialog.CustomQuestionListener()
                             {
                                 @Override
-                                public void isConnected()
+                                public void onOkClicked()
                                 {
-                                    try
+                                    new CheckConnectionTask(new CheckConnectionTask.ConnectionListener()
                                     {
-                                        if (mLocation != null)
+                                        @Override
+                                        public void isConnected()
                                         {
-                                            Log.d(TAG, "isConnected location");
-                                            reportFire(new LatLng(mLocation.getLatitude(), mLocation.getLongitude()), true);
+                                            try
+                                            {
+                                                if (mLocation != null)
+                                                {
+                                                    Log.d(TAG, "isConnected location");
+                                                    reportFire(new LatLng(mLocation.getLatitude(), mLocation.getLongitude()),
+                                                            true);
+                                                }
+                                                else
+                                                {
+                                                    Log.d(TAG, "isConnected else");
+                                                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                                                    startActivity(intent);
+                                                }
+                                            }
+                                            catch (JSONException e)
+                                            {
+                                                Log.d(TAG, "isConnected catch");
+                                                e.printStackTrace();
+                                                Intent intent = new Intent(Intent.ACTION_DIAL);
+                                                startActivity(intent);
+                                            }
                                         }
-                                        else
+
+                                        @Override
+                                        public void notConnected()
                                         {
-                                            Log.d(TAG, "isConnected else");
-                                            Intent intent = new Intent(Intent.ACTION_DIAL);
-                                            startActivity(intent);
+                                            Log.d(TAG, "notConnected");
                                         }
-                                    }
-                                    catch (JSONException e)
-                                    {
-                                        Log.d(TAG, "isConnected catch");
-                                        e.printStackTrace();
-                                        Intent intent = new Intent(Intent.ACTION_DIAL);
-                                        startActivity(intent);
-                                    }
+                                    }).execute();
                                 }
 
                                 @Override
-                                public void notConnected()
+                                public void onCancel() throws JSONException
                                 {
-                                    Log.d(TAG, "notConnected");
                                 }
-                            }).execute();
-                        }
-
-                        @Override
-                        public void onCancel() throws JSONException
-                        {
-                        }
-                    });
+                            });
 
                     break;
                 case R.id.button_report_fire:
@@ -328,19 +377,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                     else
                     {
-                        dialog.initQuestionDialog("Are you sure?", "Report", "Cancel", true, new CustomAlertDialog.CustomQuestionListener()
-                        {
-                            @Override
-                            public void onOkClicked() throws Exception
-                            {
-                                reportFire(mLatLng, false);
-                            }
+                        dialog.initQuestionDialog("Are you sure?", "Report", "Cancel", true,
+                                new CustomAlertDialog.CustomQuestionListener()
+                                {
+                                    @Override
+                                    public void onOkClicked() throws Exception
+                                    {
+                                        reportFire(mLatLng, false);
+                                    }
 
-                            @Override
-                            public void onCancel() throws JSONException
-                            {
-                            }
-                        });
+                                    @Override
+                                    public void onCancel() throws JSONException
+                                    {
+                                    }
+                                });
                     }
                     break;
             }
@@ -367,7 +417,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mLocation = location;
             if (mMap != null)
             {
-                CameraUpdate cu = CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15f);
+                CameraUpdate cu = CameraUpdateFactory
+                        .newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15f);
                 mMap.animateCamera(cu);
             }
         }

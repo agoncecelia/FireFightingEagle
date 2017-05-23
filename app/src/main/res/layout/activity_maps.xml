@@ -67,7 +67,7 @@
             android:layout_height="wrap_content"
             android:text="Select fire location"
             android:textColor="@android:color/holo_red_dark"
-            android:textSize="30sp"
+            android:textSize="20sp"
             />
         <Button
             android:id="@+id/button_SOS"
@@ -75,7 +75,7 @@
             android:layout_height="wrap_content"
             android:text="SOS"
             android:textColor="@android:color/holo_red_dark"
-            android:textSize="30sp"
+            android:textSize="20sp"
             />
 
     </LinearLayout>

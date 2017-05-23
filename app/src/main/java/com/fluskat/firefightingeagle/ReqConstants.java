@@ -27,4 +27,6 @@ public class ReqConstants
     public static String REPORT_FIRE = HOST + "reportFire";
 
     public static String GET_ACTIVE_FIRES = HOST + "getActiveFires";
+
+    public static String MARK_ME_SAFE =HOST+"markSafe";
 }

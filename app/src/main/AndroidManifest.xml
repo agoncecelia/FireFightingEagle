@@ -47,6 +47,7 @@
         <activity android:name=".RegisterActivity"/>
         <activity android:name=".Calculator"/>
         <activity android:name=".MapsActivity"/>
+        <activity android:name=".MarkMeSafeActivity"/>
 
         <service
             android:name=".gcm.MyFcmListenerService"
